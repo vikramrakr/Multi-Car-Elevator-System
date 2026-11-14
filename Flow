@@ -1,0 +1,55 @@
+Flow 1: Outside Passenger Presses Hall Button (Hall Call)
+Plaintext
+HallCallPanel.press_button(direction)
+  └──> HallButton.press(elevator_system)
+        └──> ElevatorSystem.request_pickup(floor, direction)
+              ├──> ElevatorCar.report()  [called for each car]
+              ├──> ElevatorSystem._select_best_car(reports, floor, direction)
+              └──> ElevatorCar.add_stop(floor, direction)
+                    └──> [Queued in up_queue/down_queue; picked up by async run_loop()]
+
+
+Flow 2: Inside Passenger Presses Floor Button (Car Request)
+Plaintext
+CarOperatingPanel.press_floor(floor)
+  └──> CarButton.press(elevator_car)
+        └──> ElevatorCar.request_destination(floor)
+              └──> ElevatorCar._add_up(floor) OR _add_down(floor)
+                    └──> [Queued in up_queue/down_queue; picked up by async run_loop()]
+
+
+Flow 3: Background Async Movement Loop
+Plaintext
+ElevatorSystem.start_cars()
+  └──> asyncio.create_task(ElevatorCar.run_loop())
+        └──> [Continuous loop checks up_queue / down_queue]
+              └──> await ElevatorCar._travel_to(destination)
+                    └──> [Steps floor-by-floor using await asyncio.sleep()]
+                          ├──> [If remaining distance == 1]: updates motion_state to "DECELERATING"
+                          └──> [If current_floor == target_floor]: transitions to arrival (Flow 4)
+
+
+Flow 4: Arrival, Passenger Stop & Clearing Indicators
+Plaintext
+ElevatorCar._travel_to(destination)  [upon reaching target_floor]
+  ├──> CarOperatingPanel.clear_floor(arrived_floor)
+  │     └──> CarButton.clear()
+  │
+  ├──> await ElevatorCar._handle_passenger_stop()
+  │     ├──> ElevatorCar.open_doors()
+  │     ├──> await asyncio.sleep(dwell_seconds)
+  │     └──> ElevatorCar.close_doors()  [loops with await asyncio.sleep(1) if obstructed]
+  │
+  └──> ElevatorSystem.on_floor_serviced(car, arrived_floor)
+        └──> HallCallPanel.clear_button("UP" / "DOWN")
+              └──> HallButton.clear()
+
+
+Flow 5: Door Obstruction Triggered
+Plaintext
+ElevatorCar.trigger_obstruction(True)
+  └──> ElevatorCar._handle_passenger_stop()  [already waiting in dwell/close loop]
+        └──> ElevatorCar.close_doors()  [sees door_obstructed == True]
+              └──> ElevatorCar.open_doors()  [returns False, loop waits via await asyncio.sleep(1)]
+                    └──> ElevatorCar.trigger_obstruction(False)  [when cleared]
+                          └──> ElevatorCar.close_doors()  [returns True, exits loop]
