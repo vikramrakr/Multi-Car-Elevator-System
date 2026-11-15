@@ -489,7 +489,7 @@ class ElevatorGUI:
 
         for idx, car in enumerate(self.system.elevators):
             rep = car.report()
-            x_center = 55 + idx * self.shaft_width
+            x_center = 75 + idx * self.shaft_width
             half_w = min(25, (self.shaft_width // 2) - 10)
 
             self.canvas.create_rectangle(
