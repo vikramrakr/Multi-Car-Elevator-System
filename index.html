@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi Car Elevator System</title>
+  <style>
+    :root {
+      --bg-main: #1e1e2e;
+      --bg-panel: #2a2a3c;
+      --bg-card: #313244;
+      --bg-shaft: #181825;
+      --text-primary: #cdd6f4;
+      --text-muted: #a6adc8;
+      --accent-blue: #89b4fa;
+      --accent-green: #a6e3a1;
+      --accent-yellow: #f9e2af;
+      --accent-red: #f38ba8;
+      --border-color: #45475a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background-color: var(--bg-panel);
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      color: #ffffff;
+    }
+
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+    }
+
+    .controls-bar input {
+      width: 60px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-main);
+      color: white;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #11111b;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .dashboard {
+      display: flex;
+      flex: 1;
+      gap: 15px;
+      padding: 15px;
+      overflow: hidden;
+    }
+
+    .panel-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+    }
+
+    .panel-title {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #ffffff;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    /* Hall Call Panels */
+    .hall-panel {
+      width: 210px;
+      flex-shrink: 0;
+    }
+
+    .hall-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .hall-row span {
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .hall-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    /* Shafts Canvas Area */
+    .shafts-panel {
+      flex: 1;
+      min-width: 280px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #shaftCanvas {
+      background: var(--bg-shaft);
+      border-radius: 4px;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    /* Car Operating Panels */
+    .cars-panel {
+      width: 310px;
+      flex-shrink: 0;
+    }
+
+    .car-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .car-header {
+      font-weight: bold;
+      color: var(--accent-blue);
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+
+    .car-status {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .floor-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .sim-btn {
+      background: #e0e0e0;
+      color: #11111b;
+      border: none;
+      border-radius: 3px;
+      padding: 5px 4px;
+      font-size: 0.78rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .sim-btn.lit {
+      background: var(--accent-yellow);
+      box-shadow: 0 0 6px var(--accent-yellow);
+    }
+
+    .door-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .block-label {
+      color: var(--accent-red);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      margin-left: auto;
+    }
+
+    @media (max-width: 850px) {
+      body {
+        height: auto;
+        overflow: auto;
+      }
+      .dashboard {
+        flex-direction: column;
+        overflow: visible;
+      }
+      .hall-panel, .cars-panel {
+        width: 100%;
+        max-height: 320px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Multi Car Elevator System</h1>
+    <div class="controls-bar">
+      <label>Floors: <input type="number" id="inputFloors" value="8" min="2" max="30" /></label>
+      <label>Lifts: <input type="number" id="inputLifts" value="4" min="1" max="15" /></label>
+      <button class="btn-primary" onclick="restartSimulation()">Apply & Reset</button>
+    </div>
+  </header>
+
+  <main class="dashboard">
+    <!-- LEFT: Hall Call Panels -->
+    <section class="panel-box hall-panel">
+      <div class="panel-title">Hall Call Panels</div>
+      <div class="scroll-area" id="hallContainer"></div>
+    </section>
+
+    <!-- CENTER: Elevator Shafts -->
+    <section class="panel-box shafts-panel">
+      <div class="panel-title" style="width: 100%;">Elevator Shafts</div>
+      <canvas id="shaftCanvas"></canvas>
+    </section>
+
+    <!-- RIGHT: Car Operating Panels -->
+    <section class="panel-box cars-panel">
+      <div class="panel-title">Car Operating Panels</div>
+      <div class="scroll-area" id="carsContainer"></div>
+    </section>
+  </main>
+
+  <script>
+    class ElevatorCar {
+      constructor(carId, totalFloors, system) {
+        this.carId = carId;
+        this.totalFloors = totalFloors;
+        this.system = system;
+
+        this.currentFloor = 1;
+        this.visualFloor = 1.0;
+        this.targetFloor = null;
+        this.direction = "IDLE";
+        this.motionState = "STOPPED";
+        this.doorState = "CLOSED";
+
+        this.dwellSeconds = 2.0;
+        this.travelSpeed = 1.0;
+        this.doorObstructed = false;
+        this.actionTimer = 0.0;
+
+        this.upQueue = [];
+        this.downQueue = [];
+        this.litButtons = new Set();
+      }
+
+      report() {
+        return {
+          carId: this.carId,
+          currentFloor: this.currentFloor,
+          visualFloor: this.visualFloor,
+          direction: this.direction,
+          motionState: this.motionState,
+          doorState: this.doorState,
+          workload: this.upQueue.length + this.downQueue.length
+        };
+      }
+
+      step(dt) {
+        if (this.doorState === "OPEN") {
+          if (this.doorObstructed) return;
+          this.actionTimer -= dt;
+          if (this.actionTimer <= 0) {
+            this.closeDoors();
+          }
+          return;
+        }
+
+        if (this.motionState === "STOPPED" && this.targetFloor === null) {
+          this.dispatchNext();
+          return;
+        }
+
+        if (this.targetFloor !== null) {
+          const stepDir = this.targetFloor > this.visualFloor ? 1 : -1;
+          this.visualFloor += (dt / this.travelSpeed) * stepDir;
+          this.currentFloor = Math.round(this.visualFloor);
+
+          const remaining = Math.abs(this.targetFloor - this.visualFloor);
+          if (remaining <= 1.0 && this.motionState === "CRUISING") {
+            this.motionState = "DECELERATING";
+          }
+
+          if ((stepDir === 1 && this.visualFloor >= this.targetFloor) ||
+              (stepDir === -1 && this.visualFloor <= this.targetFloor)) {
+            this.visualFloor = this.targetFloor;
+            this.currentFloor = this.targetFloor;
+            this.motionState = "STOPPED";
+            const arrivedFloor = this.currentFloor;
+            this.targetFloor = null;
+
+            this.litButtons.delete(arrivedFloor);
+            this.openDoors();
+            this.actionTimer = this.dwellSeconds;
+            this.system.onFloorServiced(arrivedFloor);
+          }
+        }
+      }
+
+      dispatchNext() {
+        let nextFloor = null;
+        if (this.direction === "UP") {
+          if (this.upQueue.length) nextFloor = this.upQueue.shift();
+          else if (this.downQueue.length) {
+            this.direction = "DOWN";
+            nextFloor = this.downQueue.shift();
+          } else this.direction = "IDLE";
+        } else if (this.direction === "DOWN") {
+          if (this.downQueue.length) nextFloor = this.downQueue.shift();
+          else if (this.upQueue.length) {
+            this.direction = "UP";
+            nextFloor = this.upQueue.shift();
+          } else this.direction = "IDLE";
+        } else {
+          if (this.upQueue.length) {
+            this.direction = "UP";
+            nextFloor = this.upQueue.shift();
+          } else if (this.downQueue.length) {
+            this.direction = "DOWN";
+            nextFloor = this.downQueue.shift();
+          }
+        }
+
+        if (nextFloor !== null) {
+          if (nextFloor === this.currentFloor) {
+            this.litButtons.delete(nextFloor);
+            this.openDoors();
+            this.actionTimer = this.dwellSeconds;
+            this.system.onFloorServiced(nextFloor);
+          } else {
+            this.targetFloor = nextFloor;
+            this.direction = nextFloor > this.currentFloor ? "UP" : "DOWN";
+            const dist = Math.abs(nextFloor - this.currentFloor);
+            this.motionState = dist > 1 ? "CRUISING" : "ACCELERATING";
+          }
+        }
+      }
+
+      addStop(floor, dir) {
+        if (dir === "UP") this.addUp(floor);
+        else if (dir === "DOWN") this.addDown(floor);
+      }
+
+      requestDestination(floor) {
+        this.litButtons.add(floor);
+        if (floor === this.currentFloor && this.motionState === "STOPPED") {
+          this.litButtons.delete(floor);
+          this.openDoors();
+          this.actionTimer = this.dwellSeconds;
+          return;
+        }
+        if (this.direction === "UP") {
+          floor > this.currentFloor ? this.addUp(floor) : this.addDown(floor);
+        } else if (this.direction === "DOWN") {
+          floor < this.currentFloor ? this.addDown(floor) : this.addUp(floor);
+        } else {
+          if (floor > this.currentFloor) {
+            this.direction = "UP";
+            this.addUp(floor);
+          } else {
+            this.direction = "DOWN";
+            this.addDown(floor);
+          }
+        }
+      }
+
+      addUp(floor) {
+        if (!this.upQueue.includes(floor)) {
+          this.upQueue.push(floor);
+          this.upQueue.sort((a, b) => a - b);
+        }
+      }
+
+      addDown(floor) {
+        if (!this.downQueue.includes(floor)) {
+          this.downQueue.push(floor);
+          this.downQueue.sort((a, b) => b - a);
+        }
+      }
+
+      openDoors() {
+        if (this.motionState === "STOPPED") this.doorState = "OPEN";
+      }
+
+      closeDoors() {
+        if (this.doorObstructed) {
+          this.openDoors();
+          return;
+        }
+        this.doorState = "CLOSED";
+      }
+
+      pressDoorOpen() {
+        if (this.motionState === "STOPPED") {
+          this.openDoors();
+          this.actionTimer = this.dwellSeconds;
+        }
+      }
+
+      pressDoorClose() {
+        if (this.motionState === "STOPPED" && this.doorState === "OPEN") {
+          this.closeDoors();
+        }
+      }
+
+      setObstruction(val) {
+        this.doorObstructed = val;
+        if (val && this.motionState === "STOPPED") this.openDoors();
+      }
+    }
+
+    class ElevatorSystem {
+      constructor(numFloors, numElevators) {
+        this.numFloors = numFloors;
+        this.numElevators = numElevators;
+        this.elevators = Array.from({ length: numElevators }, (_, i) => new ElevatorCar(i + 1, numFloors, this));
+        this.hallCalls = {};
+        for (let f = 1; f <= numFloors; f++) {
+          this.hallCalls[f] = { UP: false, DOWN: false };
+        }
+      }
+
+      step(dt) {
+        this.elevators.forEach(car => car.step(dt));
+      }
+
+      requestPickup(floor, direction) {
+        if (this.hallCalls[floor][direction]) return;
+        this.hallCalls[floor][direction] = true;
+
+        const reports = this.elevators.map(c => c.report());
+        let candidates = [];
+
+        for (const rep of reports) {
+          const car = this.elevators[rep.carId - 1];
+          const onTheWay =
+            (rep.direction === "UP" && direction === "UP" && floor > rep.currentFloor) ||
+            (rep.direction === "DOWN" && direction === "DOWN" && floor < rep.currentFloor) ||
+            rep.direction === "IDLE";
+          if (onTheWay) {
+            candidates.push({ dist: Math.abs(floor - rep.currentFloor), workload: rep.workload, car });
+          }
+        }
+
+        if (!candidates.length) {
+          for (const rep of reports) {
+            const car = this.elevators[rep.carId - 1];
+            candidates.push({ dist: Math.abs(floor - rep.currentFloor), workload: rep.workload, car });
+          }
+        }
+
+        candidates.sort((a, b) => a.dist - b.dist || a.workload - b.workload);
+        candidates[0].car.addStop(floor, direction);
+      }
+
+      onFloorServiced(floor) {
+        if (this.hallCalls[floor]) {
+          this.hallCalls[floor].UP = false;
+          this.hallCalls[floor].DOWN = false;
+        }
+      }
+    }
+
+    let system = null;
+    let floorHeight = 50;
+    let shaftWidth = 90;
+
+    function buildUI() {
+      const hallContainer = document.getElementById("hallContainer");
+      const carsContainer = document.getElementById("carsContainer");
+      hallContainer.innerHTML = "";
+      carsContainer.innerHTML = "";
+
+      for (let f = system.numFloors; f >= 1; f--) {
+        const row = document.createElement("div");
+        row.className = "hall-row";
+        row.innerHTML = `<span>Floor ${f}</span><div class="hall-btns" id="hall-btns-${f}"></div>`;
+        hallContainer.appendChild(row);
+
+        const btnGroup = row.querySelector(".hall-btns");
+        if (f < system.numFloors) {
+          const upBtn = document.createElement("button");
+          upBtn.className = "sim-btn";
+          upBtn.id = `hall-${f}-UP`;
+          upBtn.textContent = "▲ UP";
+          upBtn.onclick = () => system.requestPickup(f, "UP");
+          btnGroup.appendChild(upBtn);
+        }
+        if (f > 1) {
+          const dnBtn = document.createElement("button");
+          dnBtn.className = "sim-btn";
+          dnBtn.id = `hall-${f}-DOWN`;
+          dnBtn.textContent = "▼ DN";
+          dnBtn.onclick = () => system.requestPickup(f, "DOWN");
+          btnGroup.appendChild(dnBtn);
+        }
+      }
+
+      for (const car of system.elevators) {
+        const card = document.createElement("div");
+        card.className = "car-card";
+        card.innerHTML = `
+          <div class="car-header">Car ${car.carId}</div>
+          <div class="car-status" id="status-${car.carId}">F1 | IDLE | STOPPED</div>
+          <div class="floor-grid" id="grid-${car.carId}"></div>
+          <div class="door-controls">
+            <button class="sim-btn" id="open-${car.carId}">◄|► Open</button>
+            <button class="sim-btn" id="close-${car.carId}">►|◄ Close</button>
+            <label class="block-label"><input type="checkbox" id="block-${car.carId}" /> Block</label>
+          </div>
+        `;
+        carsContainer.appendChild(card);
+
+        const grid = card.querySelector(`#grid-${car.carId}`);
+        for (let f = 1; f <= system.numFloors; f++) {
+          const btn = document.createElement("button");
+          btn.className = "sim-btn";
+          btn.id = `car-${car.carId}-f-${f}`;
+          btn.textContent = f;
+          btn.onclick = () => car.requestDestination(f);
+          grid.appendChild(btn);
+        }
+
+        card.querySelector(`#open-${car.carId}`).onclick = () => car.pressDoorOpen();
+        card.querySelector(`#close-${car.carId}`).onclick = () => car.pressDoorClose();
+        card.querySelector(`#block-${car.carId}`).onchange = (e) => car.setObstruction(e.target.checked);
+      }
+
+      const canvas = document.getElementById("shaftCanvas");
+      floorHeight = Math.max(34, Math.min(60, Math.floor(600 / system.numFloors)));
+      shaftWidth = Math.max(70, Math.min(105, Math.floor(650 / system.numElevators)));
+      canvas.height = system.numFloors * floorHeight + 30;
+      canvas.width = system.numElevators * shaftWidth + 45;
+    }
+
+    function render() {
+      const canvas = document.getElementById("shaftCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let f = 1; f <= system.numFloors; f++) {
+        const y = canvas.height - f * floorHeight + 10;
+        ctx.strokeStyle = "#313244";
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(10, y);
+        ctx.lineTo(canvas.width - 10, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#6c7086";
+        ctx.font = "11px Arial";
+        ctx.fillText(`F${f}`, 12, y - 6);
+
+        const upEl = document.getElementById(`hall-${f}-UP`);
+        const dnEl = document.getElementById(`hall-${f}-DOWN`);
+        if (upEl) upEl.classList.toggle("lit", system.hallCalls[f].UP);
+        if (dnEl) dnEl.classList.toggle("lit", system.hallCalls[f].DOWN);
+      }
+
+      system.elevators.forEach((car, idx) => {
+        const rep = car.report();
+        const xCenter = 55 + idx * shaftWidth;
+        const halfW = Math.min(24, Math.floor(shaftWidth / 2) - 8);
+
+        ctx.strokeStyle = "#45475a";
+        ctx.strokeRect(xCenter - halfW - 4, 10, (halfW + 4) * 2, canvas.height - 20);
+
+        const yBottom = canvas.height - rep.visualFloor * floorHeight + 10;
+        const yTop = yBottom - (floorHeight - 8);
+
+        ctx.fillStyle =
+          rep.doorState === "OPEN" ? "#a6e3a1" :
+          rep.motionState !== "STOPPED" ? "#89b4fa" : "#bac2de";
+
+        ctx.fillRect(xCenter - halfW, yTop, halfW * 2, yBottom - yTop);
+        ctx.strokeStyle = "#ffffff";
+        ctx.strokeRect(xCenter - halfW, yTop, halfW * 2, yBottom - yTop);
+
+        ctx.fillStyle = "#11111b";
+        ctx.font = "bold 10px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(`C${car.carId}`, xCenter, (yTop + yBottom) / 2 - 2);
+        ctx.fillText(rep.doorState, xCenter, (yTop + yBottom) / 2 + 10);
+        ctx.textAlign = "left";
+
+        document.getElementById(`status-${car.carId}`).textContent =
+          `F${rep.currentFloor} | ${rep.direction} | ${rep.motionState}`;
+
+        for (let f = 1; f <= system.numFloors; f++) {
+          const btn = document.getElementById(`car-${car.carId}-f-${f}`);
+          if (btn) btn.classList.toggle("lit", car.litButtons.has(f));
+        }
+      });
+    }
+
+    function restartSimulation() {
+      const floors = Math.max(2, Math.min(30, parseInt(document.getElementById("inputFloors").value) || 8));
+      const lifts = Math.max(1, Math.min(15, parseInt(document.getElementById("inputLifts").value) || 4));
+      system = new ElevatorSystem(floors, lifts);
+      buildUI();
+    }
+
+    restartSimulation();
+    setInterval(() => {
+      system.step(0.05);
+      render();
+    }, 50);
+  </script>
+</body>
+</html>
