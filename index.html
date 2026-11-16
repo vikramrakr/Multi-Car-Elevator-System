@@ -260,7 +260,7 @@
 
     <!-- RIGHT: Car Operating Panels -->
     <section class="panel-box cars-panel">
-      <div class="panel-title">Car Operating Panels</div>
+      <div class="panel-title">Elevator Buttons</div>
       <div class="scroll-area" id="carsContainer"></div>
     </section>
   </main>
@@ -545,7 +545,7 @@
         const card = document.createElement("div");
         card.className = "car-card";
         card.innerHTML = `
-          <div class="car-header">Car ${car.carId}</div>
+          <div class="car-header">Elevator ${car.carId}</div>
           <div class="car-status" id="status-${car.carId}">F1 | IDLE | STOPPED</div>
           <div class="floor-grid" id="grid-${car.carId}"></div>
           <div class="door-controls">
@@ -625,7 +625,7 @@
         ctx.fillStyle = "#11111b";
         ctx.font = "bold 10px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(`C${car.carId}`, xCenter, (yTop + yBottom) / 2 - 2);
+        ctx.fillText(`E${car.carId}`, xCenter, (yTop + yBottom) / 2 - 2);
         ctx.fillText(rep.doorState, xCenter, (yTop + yBottom) / 2 + 10);
         ctx.textAlign = "left";
 

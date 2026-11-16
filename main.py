@@ -434,7 +434,7 @@ class ElevatorGUI:
 
 # --- RIGHT: Car Operating Panels (Single Vertical Stack + Scrollbar) ---
         cars_outer = tk.LabelFrame(
-            main_frame, text="Car Operating Panels", fg="white", bg="#2a2a3c", padx=8, pady=8
+            main_frame, text="Elevator Buttons", fg="white", bg="#2a2a3c", padx=8, pady=8
         )
         cars_outer.pack(side=tk.LEFT, fill=tk.Y)
 
@@ -443,7 +443,7 @@ class ElevatorGUI:
         for car in self.system.elevators:
             cid = car.car_id
             c_box = tk.LabelFrame(
-                cars_frame, text=f"Car {cid}", fg="#89b4fa", bg="#313244", padx=8, pady=8
+                cars_frame, text=f"Elevator {cid}", fg="#89b4fa", bg="#313244", padx=8, pady=8
             )
             c_box.pack(fill=tk.X, padx=4, pady=6)
 
@@ -511,7 +511,7 @@ class ElevatorGUI:
             )
             self.canvas.create_text(
                 x_center, (y_top + y_bottom) / 2,
-                text=f"C{car.car_id}\n{rep['door_state']}",
+                text=f"E{car.car_id}\n{rep['door_state']}",
                 fill="#11111b", font=("Arial", 7, "bold")
             )
 
